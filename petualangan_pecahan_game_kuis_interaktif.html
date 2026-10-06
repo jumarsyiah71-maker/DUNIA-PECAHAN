@@ -1,0 +1,1196 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Petualangan Pecahan - Membandingkan & Mengurutkan</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        fredoka: ['Fredoka', 'sans-serif'],
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            500: '#22c55e',
+                            600: '#16a34a',
+                            700: '#15803d',
+                        },
+                        funPurple: {
+                            400: '#c084fc',
+                            500: '#a855f7',
+                            600: '#9333ea',
+                            700: '#7e22ce',
+                        },
+                        funYellow: {
+                            300: '#fde047',
+                            400: '#facc15',
+                            500: '#eab308',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        .font-game {
+            font-family: 'Fredoka', cursive, sans-serif;
+        }
+        .drag-card {
+            touch-action: none;
+            cursor: grab;
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+        }
+        .drag-card:active {
+            cursor: grabbing;
+            transform: scale(1.05) rotate(2deg);
+        }
+        .drag-over {
+            border-color: #3b82f6 !important;
+            background-color: #eff6ff !important;
+            transform: scale(1.02);
+        }
+        .fraction-line {
+            border-bottom: 3px solid currentColor;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+        }
+        @keyframes pulse-subtle {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.03); }
+        }
+        .animate-pulse-subtle {
+            animation: pulse-subtle 2s infinite ease-in-out;
+        }
+        .bounce-short {
+            animation: bounceShort 0.4s ease;
+        }
+        @keyframes bounceShort {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-indigo-900 via-purple-800 to-pink-700 min-h-screen text-slate-800 pb-12 flex flex-col">
+
+    <header class="w-full bg-slate-900/40 backdrop-blur-md border-b border-white/10 sticky top-0 z-50">
+        <div class="max-w-6xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3 text-white">
+            <div class="flex items-center gap-3 cursor-pointer" onclick="showScreen('home')">
+                <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-yellow-400 to-orange-500 flex items-center justify-center text-slate-900 font-bold text-xl shadow-lg">
+                    ½
+                </div>
+                <div>
+                    <h1 class="font-game text-xl md:text-2xl font-bold tracking-wide leading-none text-yellow-300">Dunia Pecahan</h1>
+                    <p class="text-xs text-indigo-200">Membandingkan & Mengurutkan</p>
+                </div>
+            </div>
+
+            <!-- Dashboard Stats -->
+            <div class="flex items-center gap-3 md:gap-6 bg-white/10 px-4 py-1.5 rounded-full border border-white/20 text-sm">
+                <div class="flex items-center gap-1.5">
+                    <span class="text-xl">⭐</span>
+                    <span id="global-score" class="font-bold text-yellow-300">0</span>
+                    <span class="text-xs text-indigo-200">Poin</span>
+                </div>
+                <div class="h-4 w-[1px] bg-white/20"></div>
+                <div class="flex items-center gap-1.5">
+                    <span class="text-xl">🔥</span>
+                    <span id="global-streak" class="font-bold text-orange-400">0</span>
+                    <span class="text-xs text-indigo-200">Streak</span>
+                </div>
+                <div class="h-4 w-[1px] bg-white/20"></div>
+                <button onclick="toggleAudio()" id="audio-btn" class="hover:bg-white/10 p-1 rounded-full transition" title="Toggle Suara">
+                    🔊
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-5xl mx-auto px-4 mt-6 flex-grow w-full">
+
+        <!-- SCREEN: HOME MENU -->
+        <section id="screen-home" class="space-y-8 transition-all">
+            <!-- Hero Banner -->
+            <div class="text-center space-y-3 py-6 text-white">
+                <span class="inline-block px-4 py-1.5 bg-yellow-400/20 text-yellow-300 rounded-full text-xs md:text-sm font-semibold border border-yellow-400/30">
+                    🎯 Pembelajaran Matematika SD (Pecahan)
+                </span>
+                <h2 class="font-game text-3xl md:text-5xl font-extrabold tracking-tight">
+                    Petualangan Menguasai Pecahan!
+                </h2>
+                <p class="text-indigo-100 max-w-xl mx-auto text-sm md:text-base">
+                    Pilih mode permainan interaktif untuk melatih kemampuan membandingkan dan mengurutkan pecahan secara visual dan menyenangkan.
+                </p>
+            </div>
+
+            <!-- Mode Selection Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Mode 1: Drag & Drop Sorting -->
+                <div onclick="startMode('sort')" class="glass-card rounded-3xl p-6 border-2 border-white/40 shadow-2xl hover:scale-[1.02] transition cursor-pointer group flex flex-col justify-between">
+                    <div>
+                        <div class="flex justify-between items-start mb-4">
+                            <div class="w-14 h-14 rounded-2xl bg-emerald-500 text-white flex items-center justify-center text-2xl shadow-lg group-hover:rotate-6 transition">
+                                📶
+                            </div>
+                            <span class="bg-emerald-100 text-emerald-800 text-xs font-bold px-3 py-1 rounded-full">Drag & Drop</span>
+                        </div>
+                        <h3 class="font-game text-2xl font-bold text-slate-800 mb-2">Mengurutkan Pecahan</h3>
+                        <p class="text-slate-600 text-sm mb-4">
+                            Geser dan susun kartu pecahan dari terkecil ke terbesar atau sebaliknya. Dilengkapi bantuan visual pecahan!
+                        </p>
+                    </div>
+                    <button class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold font-game flex items-center justify-center gap-2 shadow-md">
+                        <span>Mulai Bermain</span>
+                        <span>➔</span>
+                    </button>
+                </div>
+
+                <!-- Mode 2: Compare fractions -->
+                <div onclick="startMode('compare')" class="glass-card rounded-3xl p-6 border-2 border-white/40 shadow-2xl hover:scale-[1.02] transition cursor-pointer group flex flex-col justify-between">
+                    <div>
+                        <div class="flex justify-between items-start mb-4">
+                            <div class="w-14 h-14 rounded-2xl bg-purple-600 text-white flex items-center justify-center text-2xl shadow-lg group-hover:-rotate-6 transition">
+                                ⚖️
+                            </div>
+                            <span class="bg-purple-100 text-purple-800 text-xs font-bold px-3 py-1 rounded-full">Simbol & Interactive</span>
+                        </div>
+                        <h3 class="font-game text-2xl font-bold text-slate-800 mb-2">Membandingkan Pecahan</h3>
+                        <p class="text-slate-600 text-sm mb-4">
+                            Tentukan apakah pecahan lebih besar (&gt;), lebih kecil (&lt;), atau sama dengan (=).
+                        </p>
+                    </div>
+                    <button class="w-full py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-bold font-game flex items-center justify-center gap-2 shadow-md">
+                        <span>Mulai Membandingkan</span>
+                        <span>➔</span>
+                    </button>
+                </div>
+
+                <!-- Mode 3: Multiple Choice Quiz -->
+                <div onclick="startMode('quiz')" class="glass-card rounded-3xl p-6 border-2 border-white/40 shadow-2xl hover:scale-[1.02] transition cursor-pointer group flex flex-col justify-between">
+                    <div>
+                        <div class="flex justify-between items-start mb-4">
+                            <div class="w-14 h-14 rounded-2xl bg-amber-500 text-white flex items-center justify-center text-2xl shadow-lg group-hover:rotate-6 transition">
+                                📝
+                            </div>
+                            <span class="bg-amber-100 text-amber-800 text-xs font-bold px-3 py-1 rounded-full">Pilihan Ganda</span>
+                        </div>
+                        <h3 class="font-game text-2xl font-bold text-slate-800 mb-2">Kuis Soal Cerita & Konsep</h3>
+                        <p class="text-slate-600 text-sm mb-4">
+                            Uji pemahamanmu lewat kuis interaktif dengan timer, penjelasan rinci, dan reward lencana.
+                        </p>
+                    </div>
+                    <button class="w-full py-3 bg-amber-500 hover:bg-amber-600 text-white rounded-xl font-bold font-game flex items-center justify-center gap-2 shadow-md">
+                        <span>Mulai Kuis</span>
+                        <span>➔</span>
+                    </button>
+                </div>
+
+                <!-- Mode 4: Sandbox Visualizer -->
+                <div onclick="startMode('sandbox')" class="glass-card rounded-3xl p-6 border-2 border-white/40 shadow-2xl hover:scale-[1.02] transition cursor-pointer group flex flex-col justify-between">
+                    <div>
+                        <div class="flex justify-between items-start mb-4">
+                            <div class="w-14 h-14 rounded-2xl bg-blue-600 text-white flex items-center justify-center text-2xl shadow-lg group-hover:-rotate-6 transition">
+                                🎨
+                            </div>
+                            <span class="bg-blue-100 text-blue-800 text-xs font-bold px-3 py-1 rounded-full">Eksplorasi Sandbox</span>
+                        </div>
+                        <h3 class="font-game text-2xl font-bold text-slate-800 mb-2">Laboratorium Visual Pecahan</h3>
+                        <p class="text-slate-600 text-sm mb-4">
+                            Bebas ubah pembilang dan penyebut untuk melihat diagram lingkaran &amp; batang secara real-time.
+                        </p>
+                    </div>
+                    <button class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold font-game flex items-center justify-center gap-2 shadow-md">
+                        <span>Buka Laboratorium</span>
+                        <span>➔</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Achievements & Badges Panel -->
+            <div class="glass-card rounded-3xl p-6 border border-white/30">
+                <h3 class="font-game text-xl font-bold text-slate-800 mb-4 flex items-center gap-2">
+                    🏆 Lencana &amp; Pencapaian
+                </h3>
+                <div id="badges-container" class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                    <!-- Dynamic badges populated by JS -->
+                </div>
+            </div>
+        </section>
+
+        <section id="screen-sort" class="hidden space-y-6">
+            <!-- Top Controls Header -->
+            <div class="flex items-center justify-between bg-white/10 p-4 rounded-2xl text-white backdrop-blur-md">
+                <button onclick="showScreen('home')" class="px-4 py-2 bg-white/20 hover:bg-white/30 rounded-xl font-bold text-sm transition">
+                    ⬅ Kembali
+                </button>
+                <div class="text-center">
+                    <span class="text-xs uppercase tracking-widest text-indigo-200">Level Mengurutkan</span>
+                    <h2 id="sort-level-indicator" class="font-game text-xl font-bold text-yellow-300">Level 1</h2>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button onclick="toggleVisualHelper()" id="btn-toggle-helper" class="px-3 py-1.5 bg-yellow-400 text-slate-900 rounded-lg text-xs font-bold shadow hover:bg-yellow-300 transition">
+                        👁 Visual: ON
+                    </button>
+                </div>
+            </div>
+
+            <!-- Main Interactive Sorting Canvas -->
+            <div class="glass-card rounded-3xl p-6 md:p-8 space-y-6 border-2 border-white/50 shadow-2xl">
+                <!-- Instruction Header -->
+                <div class="text-center space-y-2">
+                    <div id="sort-instruction-badge" class="inline-block px-4 py-1.5 bg-indigo-100 text-indigo-800 rounded-full font-bold text-sm">
+                        Urutkan dari Terkecil ke Terbesar ➔
+                    </div>
+                    <p class="text-xs md:text-sm text-slate-500">
+                        Geser (drag) kartu pecahan ke dalam kotak urutan di bawah, atau klik kartu lalu klik kotak tujuan.
+                    </p>
+                </div>
+
+                <!-- Drop Target Slots Container -->
+                <div class="space-y-2">
+                    <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider text-center">Kotak Hasil Urutan</label>
+                    <div id="sort-slots-container" class="flex flex-wrap items-center justify-center gap-3 min-h-[120px] p-4 bg-slate-100/80 rounded-2xl border-2 border-dashed border-slate-300">
+                        <!-- Slots generated by JS -->
+                    </div>
+                </div>
+
+                <!-- Source Draggable Cards Pool -->
+                <div class="space-y-2">
+                    <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider text-center">Pilihan Kartu Pecahan</label>
+                    <div id="sort-source-container" class="flex flex-wrap items-center justify-center gap-3 min-h-[120px] p-4 bg-purple-50 rounded-2xl border border-purple-200">
+                        <!-- Draggables generated by JS -->
+                    </div>
+                </div>
+
+                <!-- Action Buttons & Feedback -->
+                <div class="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-slate-200">
+                    <button onclick="resetCurrentSort()" class="w-full sm:w-auto px-5 py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl text-sm transition">
+                        🔄 Riset Posisi
+                    </button>
+                    <div id="sort-feedback" class="text-center font-bold text-sm min-h-[24px]"></div>
+                    <button onclick="checkSortAnswer()" class="w-full sm:w-auto px-8 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-game font-bold rounded-xl shadow-lg transition text-base">
+                        ✅ Periksa Jawaban
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <section id="screen-compare" class="hidden space-y-6">
+            <!-- Top Controls Header -->
+            <div class="flex items-center justify-between bg-white/10 p-4 rounded-2xl text-white backdrop-blur-md">
+                <button onclick="showScreen('home')" class="px-4 py-2 bg-white/20 hover:bg-white/30 rounded-xl font-bold text-sm transition">
+                    ⬅ Kembali
+                </button>
+                <div class="text-center">
+                    <span class="text-xs uppercase tracking-widest text-indigo-200">Level Membandingkan</span>
+                    <h2 id="compare-level-indicator" class="font-game text-xl font-bold text-yellow-300">Soal 1 / 10</h2>
+                </div>
+                <div></div>
+            </div>
+
+            <!-- Compare Canvas Card -->
+            <div class="glass-card rounded-3xl p-6 md:p-8 space-y-8 border-2 border-white/50 shadow-2xl">
+                <div class="text-center space-y-1">
+                    <h3 class="font-game text-2xl font-bold text-slate-800">Pilih Simbol yang Tepat!</h3>
+                    <p class="text-slate-600 text-sm">Bandingkan dua pecahan di bawah ini</p>
+                </div>
+
+                <!-- Fraction Comparison Layout -->
+                <div class="flex flex-col md:flex-row items-center justify-center gap-6 md:gap-10 my-6">
+                    <!-- Fraction Left -->
+                    <div class="flex flex-col items-center bg-indigo-50 p-6 rounded-2xl border-2 border-indigo-200 w-48 shadow-md">
+                        <div id="compare-frac-left" class="font-game text-4xl font-extrabold text-indigo-900 flex flex-col items-center">
+                            <span>1</span>
+                            <span class="w-12 h-1 bg-indigo-900 my-1 rounded-full"></span>
+                            <span>2</span>
+                        </div>
+                        <div id="compare-visual-left" class="mt-4 w-28 h-28 flex items-center justify-center">
+                            <!-- SVG Rendered -->
+                        </div>
+                    </div>
+
+                    <!-- Comparison Slot Target -->
+                    <div id="compare-slot" class="w-20 h-20 md:w-24 md:h-24 rounded-2xl bg-yellow-100 border-4 border-dashed border-yellow-400 flex items-center justify-center font-game text-4xl font-extrabold text-slate-800 shadow-inner">
+                        ?
+                    </div>
+
+                    <!-- Fraction Right -->
+                    <div class="flex flex-col items-center bg-purple-50 p-6 rounded-2xl border-2 border-purple-200 w-48 shadow-md">
+                        <div id="compare-frac-right" class="font-game text-4xl font-extrabold text-purple-900 flex flex-col items-center">
+                            <span>3</span>
+                            <span class="w-12 h-1 bg-purple-900 my-1 rounded-full"></span>
+                            <span>4</span>
+                        </div>
+                        <div id="compare-visual-right" class="mt-4 w-28 h-28 flex items-center justify-center">
+                            <!-- SVG Rendered -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Choice Symbols -->
+                <div class="space-y-3">
+                    <p class="text-center text-xs font-bold text-slate-400 uppercase tracking-wider">Klik atau Geser Simbol:</p>
+                    <div class="flex justify-center items-center gap-4">
+                        <button onclick="selectCompareSymbol('<')" class="w-16 h-16 md:w-20 md:h-20 bg-white hover:bg-yellow-50 border-2 border-yellow-400 rounded-2xl text-3xl font-bold font-game text-slate-800 shadow-md active:scale-95 transition flex items-center justify-center">
+                            &lt;
+                        </button>
+                        <button onclick="selectCompareSymbol('=')" class="w-16 h-16 md:w-20 md:h-20 bg-white hover:bg-yellow-50 border-2 border-yellow-400 rounded-2xl text-3xl font-bold font-game text-slate-800 shadow-md active:scale-95 transition flex items-center justify-center">
+                            =
+                        </button>
+                        <button onclick="selectCompareSymbol('>');" class="w-16 h-16 md:w-20 md:h-20 bg-white hover:bg-yellow-50 border-2 border-yellow-400 rounded-2xl text-3xl font-bold font-game text-slate-800 shadow-md active:scale-95 transition flex items-center justify-center">
+                            &gt;
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Feedback area -->
+                <div id="compare-feedback" class="text-center font-bold text-sm min-h-[30px] p-3 rounded-xl"></div>
+            </div>
+        </section>
+
+        <section id="screen-quiz" class="hidden space-y-6">
+            <!-- Quiz Top Info -->
+            <div class="flex items-center justify-between bg-white/10 p-4 rounded-2xl text-white backdrop-blur-md">
+                <button onclick="showScreen('home')" class="px-4 py-2 bg-white/20 hover:bg-white/30 rounded-xl font-bold text-sm transition">
+                    ⬅ Menu Utama
+                </button>
+                <div class="text-center">
+                    <span class="text-xs uppercase tracking-widest text-indigo-200">Kuis Pilihan Ganda</span>
+                    <h2 id="quiz-progress-indicator" class="font-game text-xl font-bold text-yellow-300">Soal 1 / 5</h2>
+                </div>
+                <div class="flex items-center gap-1.5 bg-red-500/80 px-3 py-1 rounded-lg text-sm font-bold">
+                    ⏱ <span id="quiz-timer">30</span>s
+                </div>
+            </div>
+
+            <!-- Quiz Card -->
+            <div class="glass-card rounded-3xl p-6 md:p-8 space-y-6 border-2 border-white/50 shadow-2xl">
+                <!-- Question Text -->
+                <div class="space-y-4">
+                    <div id="quiz-question-type" class="text-xs font-bold text-purple-600 bg-purple-100 px-3 py-1 rounded-full inline-block">
+                        Soal Pemahaman
+                    </div>
+                    <h3 id="quiz-question-text" class="font-game text-xl md:text-2xl font-bold text-slate-800 leading-snug">
+                         Loading soal...
+                    </h3>
+                    <div id="quiz-question-visual" class="flex justify-center my-2"></div>
+                </div>
+
+                <!-- Options Grid -->
+                <div id="quiz-options-container" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Dynamic Options -->
+                </div>
+
+                <!-- Explanation Box -->
+                <div id="quiz-explanation-box" class="hidden bg-blue-50 border border-blue-200 rounded-2xl p-4 space-y-2">
+                    <div class="font-bold text-blue-900 text-sm flex items-center gap-2">
+                        💡 Penjelasan Pembelajaran:
+                    </div>
+                    <p id="quiz-explanation-text" class="text-sm text-blue-800 leading-relaxed"></p>
+                    <button onclick="nextQuizQuestion()" class="mt-2 w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-sm transition">
+                        Lanjut Soal Berikutnya ➔
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <section id="screen-sandbox" class="hidden space-y-6">
+            <div class="flex items-center justify-between bg-white/10 p-4 rounded-2xl text-white backdrop-blur-md">
+                <button onclick="showScreen('home')" class="px-4 py-2 bg-white/20 hover:bg-white/30 rounded-xl font-bold text-sm transition">
+                    ⬅ Kembali
+                </button>
+                <h2 class="font-game text-xl font-bold text-yellow-300">Laboratorium Visual Pecahan</h2>
+                <div></div>
+            </div>
+
+            <div class="glass-card rounded-3xl p-6 md:p-8 space-y-8 border-2 border-white/50 shadow-2xl">
+                <p class="text-center text-slate-600 text-sm">
+                    Ubah pembilang dan penyebut di bawah ini untuk melihat perbandingan pecahan secara otomatis dalam bentuk diagram lingkaran dan diagram batang!
+                </p>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <!-- Fraction 1 Control -->
+                    <div class="bg-indigo-50/80 p-6 rounded-2xl border border-indigo-200 space-y-4">
+                        <h4 class="font-game text-lg font-bold text-indigo-900 text-center">Pecahan Pertama (A)</h4>
+                        
+                        <div class="flex items-center justify-center gap-6">
+                            <!-- Fraction Display -->
+                            <div class="font-game text-4xl font-bold text-indigo-900 flex flex-col items-center">
+                                <span id="sb-num1-val">1</span>
+                                <span class="w-12 h-1 bg-indigo-900 my-1 rounded-full"></span>
+                                <span id="sb-den1-val">4</span>
+                            </div>
+                            <!-- Controls -->
+                            <div class="space-y-3">
+                                <div>
+                                    <label class="text-xs font-bold text-indigo-700">Pembilang (Bagian):</label>
+                                    <input type="range" id="sb-num1" min="1" max="12" value="1" oninput="updateSandbox()" class="w-full accent-indigo-600">
+                                </div>
+                                <div>
+                                    <label class="text-xs font-bold text-indigo-700">Penyebut (Total):</label>
+                                    <input type="range" id="sb-den1" min="1" max="12" value="4" oninput="updateSandbox()" class="w-full accent-indigo-600">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Visuals -->
+                        <div class="flex justify-around items-center pt-2">
+                            <div id="sb-pie1" class="w-24 h-24"></div>
+                            <div id="sb-bar1" class="w-28 h-20"></div>
+                        </div>
+                    </div>
+
+                    <!-- Fraction 2 Control -->
+                    <div class="bg-purple-50/80 p-6 rounded-2xl border border-purple-200 space-y-4">
+                        <h4 class="font-game text-lg font-bold text-purple-900 text-center">Pecahan Kedua (B)</h4>
+                        
+                        <div class="flex items-center justify-center gap-6">
+                            <!-- Fraction Display -->
+                            <div class="font-game text-4xl font-bold text-purple-900 flex flex-col items-center">
+                                <span id="sb-num2-val">2</span>
+                                <span class="w-12 h-1 bg-purple-900 my-1 rounded-full"></span>
+                                <span id="sb-den2-val">4</span>
+                            </div>
+                            <!-- Controls -->
+                            <div class="space-y-3">
+                                <div>
+                                    <label class="text-xs font-bold text-purple-700">Pembilang (Bagian):</label>
+                                    <input type="range" id="sb-num2" min="1" max="12" value="2" oninput="updateSandbox()" class="w-full accent-purple-600">
+                                </div>
+                                <div>
+                                    <label class="text-xs font-bold text-purple-700">Penyebut (Total):</label>
+                                    <input type="range" id="sb-den2" min="1" max="12" value="4" oninput="updateSandbox()" class="w-full accent-purple-600">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Visuals -->
+                        <div class="flex justify-around items-center pt-2">
+                            <div id="sb-pie2" class="w-24 h-24"></div>
+                            <div id="sb-bar2" class="w-28 h-20"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Live Comparison Result -->
+                <div class="p-4 bg-yellow-100/80 rounded-2xl border-2 border-yellow-300 text-center space-y-2">
+                    <div id="sb-result-symbol" class="font-game text-3xl font-extrabold text-slate-800">
+                        1/4 &lt; 2/4
+                    </div>
+                    <p id="sb-result-text" class="text-sm font-semibold text-slate-700">
+                        Pecahan B lebih besar daripada Pecahan A karena pembilangnya lebih besar untuk penyebut yang sama.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Modal Level Complete / Victory -->
+    <div id="victory-modal" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-md w-full p-6 md:p-8 text-center space-y-6 shadow-2xl animate-pulse-subtle border-4 border-yellow-400">
+            <div class="text-6xl">🎉</div>
+            <div>
+                <h3 id="modal-title" class="font-game text-3xl font-extrabold text-slate-800">Luar Biasa!</h3>
+                <p id="modal-subtitle" class="text-slate-600 text-sm mt-1">Kamu berhasil menyelesaikan tantangan pecahan!</p>
+            </div>
+
+            <div class="bg-yellow-50 p-4 rounded-2xl border border-yellow-200 flex justify-around items-center">
+                <div>
+                    <span class="text-xs text-slate-500 font-bold block">SKOR DITAMBAH</span>
+                    <span id="modal-score" class="font-game text-2xl font-bold text-yellow-600">+100</span>
+                </div>
+                <div class="h-8 w-[1px] bg-yellow-200"></div>
+                <div>
+                    <span class="text-xs text-slate-500 font-bold block">STREAK</span>
+                    <span id="modal-streak" class="font-game text-2xl font-bold text-orange-500">🔥 3</span>
+                </div>
+            </div>
+
+            <button onclick="closeVictoryModal()" class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-game font-bold text-lg shadow-lg transition">
+                Lanjut Bermain!
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Global Game State
+        const state = {
+            score: 0,
+            streak: 0,
+            soundEnabled: true,
+            visualHelpers: true,
+            sortLevel: 1,
+            compareIndex: 0,
+            compareScore: 0,
+            quizIndex: 0,
+            quizScore: 0,
+            quizTimer: null,
+            quizTimeLeft: 30,
+            selectedSortCardId: null, // for tap-to-select fallback
+            badges: [
+                { id: 'first_win', name: 'Pemula Pecahan', icon: '🌱', desc: 'Selesaikan 1 tantangan', unlocked: false },
+                { id: 'streak_3', name: 'Penyusun Andal', icon: '🔥', desc: 'Capai streak 3 berturut-turut', unlocked: false },
+                { id: 'sort_master', name: 'Raja Urutan', icon: '👑', desc: 'Selesaikan 3 level mengurutkan', unlocked: false },
+                { id: 'quiz_master', name: 'Jenius Pecahan', icon: '🎓', desc: 'Jawab kuis dengan nilai sempurna', unlocked: false }
+            ]
+        };
+
+        // Web Audio API Synthesizer for sound effects
+        const AudioFX = {
+            ctx: null,
+            init() {
+                if (!this.ctx) {
+                    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+            },
+            playTone(freq, type = 'sine', duration = 0.15) {
+                if (!state.soundEnabled) return;
+                try {
+                    this.init();
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = type;
+                    osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+                    gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + duration);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + duration);
+                } catch (e) {
+                    console.log('Audio playback prevented');
+                }
+            },
+            correct() {
+                this.playTone(523.25, 'sine', 0.1); // C5
+                setTimeout(() => this.playTone(659.25, 'sine', 0.1), 100); // E5
+                setTimeout(() => this.playTone(783.99, 'sine', 0.2), 200); // G5
+            },
+            wrong() {
+                this.playTone(220, 'sawtooth', 0.2); // A3
+                setTimeout(() => this.playTone(196, 'sawtooth', 0.25), 150); // G3
+            },
+            click() {
+                this.playTone(400, 'sine', 0.05);
+            }
+        };
+
+        function toggleAudio() {
+            state.soundEnabled = !state.soundEnabled;
+            document.getElementById('audio-btn').innerText = state.soundEnabled ? '🔊' : '🔇';
+        }
+
+        function createPieSVG(num, den, color = '#4f46e5', size = 80) {
+            const radius = size / 2 - 4;
+            const center = size / 2;
+            const fraction = Math.min(num / den, 1);
+
+            let slicesHTML = '';
+            for (let i = 0; i < den; i++) {
+                const startAngle = (i * 360) / den;
+                const endAngle = ((i + 1) * 360) / den;
+                
+                const x1 = center + radius * Math.cos((Math.PI * (startAngle - 90)) / 180);
+                const y1 = center + radius * Math.sin((Math.PI * (startAngle - 90)) / 180);
+                const x2 = center + radius * Math.cos((Math.PI * (endAngle - 90)) / 180);
+                const y2 = center + radius * Math.sin((Math.PI * (endAngle - 90)) / 180);
+
+                const largeArc = (endAngle - startAngle) > 180 ? 1 : 0;
+                const pathData = `M ${center} ${center} L ${x1} ${y1} A ${radius} ${radius} 0 ${largeArc} 1 ${x2} ${y2} Z`;
+
+                const isFilled = i < num;
+                const sliceColor = isFilled ? color : '#e2e8f0';
+
+                slicesHTML += `<path d="${pathData}" fill="${sliceColor}" stroke="#ffffff" stroke-width="2"/>`;
+            }
+
+            return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">${slicesHTML}</svg>`;
+        }
+
+        function createBarSVG(num, den, color = '#4f46e5', width = 100, height = 24) {
+            let cellsHTML = '';
+            const cellWidth = width / den;
+
+            for (let i = 0; i < den; i++) {
+                const isFilled = i < num;
+                const cellColor = isFilled ? color : '#e2e8f0';
+                cellsHTML += `<rect x="${i * cellWidth}" y="0" width="${cellWidth}" height="${height}" fill="${cellColor}" stroke="#ffffff" stroke-width="1.5" rx="2"/>`;
+            }
+
+            return `<svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" class="rounded-lg overflow-hidden border border-slate-300">${cellsHTML}</svg>`;
+        }
+
+        function showScreen(screenId) {
+            AudioFX.click();
+            ['home', 'sort', 'compare', 'quiz', 'sandbox'].forEach(id => {
+                const el = document.getElementById(`screen-${id}`);
+                if (el) el.classList.add('hidden');
+            });
+            const active = document.getElementById(`screen-${screenId}`);
+            if (active) active.classList.remove('hidden');
+
+            if (screenId === 'home') renderBadges();
+            if (screenId === 'sandbox') updateSandbox();
+        }
+
+        function updateGlobalStats(points = 0) {
+            if (points > 0) {
+                state.score += points;
+                state.streak += 1;
+                checkBadges();
+            } else if (points < 0) {
+                state.streak = 0;
+            }
+            document.getElementById('global-score').innerText = state.score;
+            document.getElementById('global-streak').innerText = state.streak;
+        }
+
+        function checkBadges() {
+            if (state.score >= 50) unlockBadge('first_win');
+            if (state.streak >= 3) unlockBadge('streak_3');
+            if (state.sortLevel > 3) unlockBadge('sort_master');
+            if (state.quizScore >= 5) unlockBadge('quiz_master');
+        }
+
+        function unlockBadge(id) {
+            const b = state.badges.find(x => x.id === id);
+            if (b && !b.unlocked) {
+                b.unlocked = true;
+                confetti({ particleCount: 50, spread: 60 });
+            }
+        }
+
+        function renderBadges() {
+            const container = document.getElementById('badges-container');
+            if (!container) return;
+            container.innerHTML = state.badges.map(b => `
+                <div class="p-3 rounded-2xl border ${b.unlocked ? 'bg-yellow-50 border-yellow-300' : 'bg-slate-100 border-slate-200 opacity-60'} flex items-center gap-3">
+                    <span class="text-2xl">${b.icon}</span>
+                    <div>
+                        <h5 class="font-bold text-xs text-slate-800">${b.name}</h5>
+                        <p class="text-[10px] text-slate-500">${b.desc}</p>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function showVictoryModal(title, subtitle, scoreEarned) {
+            AudioFX.correct();
+            confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+            document.getElementById('modal-title').innerText = title;
+            document.getElementById('modal-subtitle').innerText = subtitle;
+            document.getElementById('modal-score').innerText = `+${scoreEarned}`;
+            document.getElementById('modal-streak').innerText = `🔥 ${state.streak}`;
+            document.getElementById('victory-modal').classList.remove('hidden');
+        }
+
+        function closeVictoryModal() {
+            AudioFX.click();
+            document.getElementById('victory-modal').classList.add('hidden');
+            showScreen('home');
+        }
+
+        let currentSortData = {
+            fractions: [],
+            orderType: 'asc', // 'asc' = smallest to largest, 'desc' = largest to smallest
+            slots: []
+        };
+
+        const sortLevels = [
+            {
+                order: 'asc',
+                fractions: [ {n:1, d:4}, {n:2, d:4}, {n:3, d:4} ], // Same denominator
+                label: 'Urutkan dari Terkecil ke Terbesar ➔'
+            },
+            {
+                order: 'asc',
+                fractions: [ {n:1, d:2}, {n:1, d:4}, {n:3, d:4} ], // Same numerator or benchmark
+                label: 'Urutkan dari Terkecil ke Terbesar ➔'
+            },
+            {
+                order: 'desc',
+                fractions: [ {n:4, d:5}, {n:2, d:5}, {n:1, d:5}, {n:3, d:5} ],
+                label: 'Urutkan dari Terbesar ke Terkecil ➔'
+            },
+            {
+                order: 'asc',
+                fractions: [ {n:1, d:3}, {n:1, d:2}, {n:2, d:3}, {n:5, d:6} ],
+                label: 'Urutkan dari Terkecil ke Terbesar ➔'
+            }
+        ];
+
+        function startMode(mode) {
+            if (mode === 'sort') {
+                state.sortLevel = 1;
+                loadSortLevel();
+                showScreen('sort');
+            } else if (mode === 'compare') {
+                state.compareIndex = 0;
+                state.compareScore = 0;
+                loadCompareQuestion();
+                showScreen('compare');
+            } else if (mode === 'quiz') {
+                state.quizIndex = 0;
+                state.quizScore = 0;
+                loadQuizQuestion();
+                showScreen('quiz');
+            } else if (mode === 'sandbox') {
+                showScreen('sandbox');
+            }
+        }
+
+        function toggleVisualHelper() {
+            state.visualHelpers = !state.visualHelpers;
+            document.getElementById('btn-toggle-helper').innerText = state.visualHelpers ? '👁 Visual: ON' : '🙈 Visual: OFF';
+            renderSortCards();
+        }
+
+        function loadSortLevel() {
+            const levelIdx = Math.min(state.sortLevel - 1, sortLevels.length - 1);
+            const levelConf = sortLevels[levelIdx];
+            
+            document.getElementById('sort-level-indicator').innerText = `Level ${state.sortLevel}`;
+            document.getElementById('sort-instruction-badge').innerText = levelConf.label;
+            document.getElementById('sort-feedback').innerText = '';
+
+            // Shuffle cards for display
+            const shuffled = [...levelConf.fractions].map((f, idx) => ({
+                id: `card-${idx}-${Date.now()}`,
+                num: f.n,
+                den: f.d,
+                val: f.n / f.d
+            })).sort(() => Math.random() - 0.5);
+
+            currentSortData = {
+                fractions: shuffled,
+                orderType: levelConf.order,
+                slots: new Array(shuffled.length).fill(null)
+            };
+
+            state.selectedSortCardId = null;
+            renderSortCards();
+        }
+
+        function renderSortCards() {
+            const slotsContainer = document.getElementById('sort-slots-container');
+            const sourceContainer = document.getElementById('sort-source-container');
+
+            slotsContainer.innerHTML = '';
+            sourceContainer.innerHTML = '';
+
+            // Render slots
+            currentSortData.slots.forEach((card, idx) => {
+                const slotEl = document.createElement('div');
+                slotEl.className = `w-24 h-32 md:w-28 md:h-36 rounded-2xl border-2 border-dashed flex flex-col items-center justify-center relative transition ${
+                    card ? 'border-emerald-400 bg-emerald-50/50' : 'border-slate-300 bg-white'
+                }`;
+                slotEl.dataset.slotIndex = idx;
+
+                // Dragover listeners
+                slotEl.ondragover = (e) => { e.preventDefault(); slotEl.classList.add('drag-over'); };
+                slotEl.ondragleave = () => slotEl.classList.remove('drag-over');
+                slotEl.ondrop = (e) => handleDropOnSlot(e, idx);
+                slotEl.onclick = () => handleSlotClick(idx);
+
+                if (card) {
+                    slotEl.appendChild(createCardElement(card, false));
+                } else {
+                    slotEl.innerHTML = `<span class="text-xs font-bold text-slate-300">Posisi ${idx + 1}</span>`;
+                }
+
+                slotsContainer.appendChild(slotEl);
+            });
+
+            // Render remaining cards in source pool
+            currentSortData.fractions.forEach((card) => {
+                if (!currentSortData.slots.includes(card)) {
+                    const cardEl = createCardElement(card, true);
+                    sourceContainer.appendChild(cardEl);
+                }
+            });
+        }
+
+        function createCardElement(card, inSource) {
+            const cardEl = document.createElement('div');
+            const isSelected = state.selectedSortCardId === card.id;
+            cardEl.className = `drag-card w-20 h-28 md:w-24 md:h-32 rounded-xl bg-white border-2 p-2 flex flex-col items-center justify-between shadow-md select-none ${
+                isSelected ? 'border-yellow-400 ring-4 ring-yellow-200' : 'border-indigo-200 hover:border-indigo-400'
+            }`;
+            cardEl.draggable = true;
+
+            // HTML5 Drag Events
+            cardEl.ondragstart = (e) => {
+                e.dataTransfer.setData('text/plain', card.id);
+                AudioFX.click();
+            };
+
+            // Touch / Tap fallback selector
+            cardEl.onclick = (e) => {
+                e.stopPropagation();
+                AudioFX.click();
+                if (inSource) {
+                    if (state.selectedSortCardId === card.id) {
+                        state.selectedSortCardId = null;
+                    } else {
+                        state.selectedSortCardId = card.id;
+                    }
+                    renderSortCards();
+                } else {
+                    // Remove from slot back to source
+                    const slotIdx = currentSortData.slots.indexOf(card);
+                    if (slotIdx !== -1) {
+                        currentSortData.slots[slotIdx] = null;
+                        renderSortCards();
+                    }
+                }
+            };
+
+            // Card content
+            const fracNum = document.createElement('div');
+            fracNum.className = 'font-game text-xl md:text-2xl font-bold text-indigo-900 flex flex-col items-center';
+            fracNum.innerHTML = `<span>${card.num}</span><span class="w-8 h-[2px] bg-indigo-900 my-0.5"></span><span>${card.den}</span>`;
+
+            cardEl.appendChild(fracNum);
+
+            if (state.visualHelpers) {
+                const visual = document.createElement('div');
+                visual.className = 'w-full flex justify-center py-1';
+                visual.innerHTML = createBarSVG(card.num, card.den, '#6366f1', 60, 14);
+                cardEl.appendChild(visual);
+            }
+
+            return cardEl;
+        }
+
+        function handleDropOnSlot(e, slotIdx) {
+            e.preventDefault();
+            const cardId = e.dataTransfer.getData('text/plain');
+            placeCardInSlot(cardId, slotIdx);
+        }
+
+        function handleSlotClick(slotIdx) {
+            if (state.selectedSortCardId) {
+                placeCardInSlot(state.selectedSortCardId, slotIdx);
+                state.selectedSortCardId = null;
+            }
+        }
+
+        function placeCardInSlot(cardId, slotIdx) {
+            const card = currentSortData.fractions.find(c => c.id === cardId);
+            if (!card) return;
+
+            // Remove card from previous slot if any
+            const prevSlot = currentSortData.slots.indexOf(card);
+            if (prevSlot !== -1) {
+                currentSortData.slots[prevSlot] = null;
+            }
+
+            currentSortData.slots[slotIdx] = card;
+            AudioFX.click();
+            renderSortCards();
+        }
+
+        function resetCurrentSort() {
+            AudioFX.click();
+            currentSortData.slots = new Array(currentSortData.fractions.length).fill(null);
+            state.selectedSortCardId = null;
+            renderSortCards();
+        }
+
+        function checkSortAnswer() {
+            if (currentSortData.slots.includes(null)) {
+                AudioFX.wrong();
+                document.getElementById('sort-feedback').innerText = '⚠️ Lengkapi semua kotak urutan terlebih dahulu!';
+                document.getElementById('sort-feedback').className = 'text-center font-bold text-sm text-amber-600';
+                return;
+            }
+
+            const isAsc = currentSortData.orderType === 'asc';
+            let isCorrect = true;
+
+            for (let i = 0; i < currentSortData.slots.length - 1; i++) {
+                const currentVal = currentSortData.slots[i].val;
+                const nextVal = currentSortData.slots[i + 1].val;
+
+                if (isAsc && currentVal > nextVal) isCorrect = false;
+                if (!isAsc && currentVal < nextVal) isCorrect = false;
+            }
+
+            const feedbackEl = document.getElementById('sort-feedback');
+            if (isCorrect) {
+                updateGlobalStats(100);
+                feedbackEl.innerText = '✨ Benar Sekali! Urutan pecahanmu sudah tepat!';
+                feedbackEl.className = 'text-center font-bold text-sm text-emerald-600 bounce-short';
+
+                setTimeout(() => {
+                    state.sortLevel++;
+                    if (state.sortLevel <= sortLevels.length) {
+                        showVictoryModal('Level Selesai!', 'Kamu mengurutkan pecahan dengan sempurna.', 100);
+                        loadSortLevel();
+                    } else {
+                        showVictoryModal('Juara Mengurutkan!', 'Kamu telah menyelesaikan seluruh tantangan level!', 200);
+                        state.sortLevel = 1;
+                        showScreen('home');
+                    }
+                }, 1000);
+            } else {
+                AudioFX.wrong();
+                updateGlobalStats(-1);
+                feedbackEl.innerText = '❌ Masih ada pecahan yang tertukar. Perhatikan diagram batangnya!';
+                feedbackEl.className = 'text-center font-bold text-sm text-red-600';
+            }
+        }
+
+        const compareQuestions = [
+            { f1: {n: 1, d: 4}, f2: {n: 3, d: 4}, ans: '<' },
+            { f1: {n: 2, d: 3}, f2: {n: 1, d: 3}, ans: '>' },
+            { f1: {n: 2, d: 4}, f2: {n: 1, d: 2}, ans: '=' },
+            { f1: {n: 3, d: 5}, f2: {n: 4, d: 5}, ans: '<' },
+            { f1: {n: 5, d: 8}, f2: {n: 3, d: 8}, ans: '>' },
+            { f1: {n: 2, d: 6}, f2: {n: 1, d: 3}, ans: '=' }
+        ];
+
+        function loadCompareQuestion() {
+            const q = compareQuestions[state.compareIndex];
+            document.getElementById('compare-level-indicator').innerText = `Soal ${state.compareIndex + 1} / ${compareQuestions.length}`;
+            
+            // Render fractions
+            document.getElementById('compare-frac-left').innerHTML = `<span>${q.f1.n}</span><span class="w-12 h-1 bg-indigo-900 my-1 rounded-full"></span><span>${q.f1.d}</span>`;
+            document.getElementById('compare-frac-right').innerHTML = `<span>${q.f2.n}</span><span class="w-12 h-1 bg-purple-900 my-1 rounded-full"></span><span>${q.f2.d}</span>`;
+
+            // Render SVG Visuals
+            document.getElementById('compare-visual-left').innerHTML = createPieSVG(q.f1.n, q.f1.d, '#6366f1', 100);
+            document.getElementById('compare-visual-right').innerHTML = createPieSVG(q.f2.n, q.f2.d, '#a855f7', 100);
+
+            // Reset Slot
+            document.getElementById('compare-slot').innerText = '?';
+            document.getElementById('compare-feedback').innerText = '';
+            document.getElementById('compare-feedback').className = 'text-center font-bold text-sm min-h-[30px] p-3 rounded-xl';
+        }
+
+        function selectCompareSymbol(symbol) {
+            AudioFX.click();
+            document.getElementById('compare-slot').innerText = symbol;
+            const q = compareQuestions[state.compareIndex];
+
+            const feedback = document.getElementById('compare-feedback');
+            if (symbol === q.ans) {
+                AudioFX.correct();
+                updateGlobalStats(50);
+                feedback.innerText = '🎉 Tepat Sekali! Jawabanmu Benar!';
+                feedback.className = 'text-center font-bold text-sm min-h-[30px] p-3 rounded-xl bg-emerald-100 text-emerald-800';
+
+                setTimeout(() => {
+                    state.compareIndex++;
+                    if (state.compareIndex < compareQuestions.length) {
+                        loadCompareQuestion();
+                    } else {
+                        showVictoryModal('Selesai Membandingkan!', 'Kamu berhasil menyelesaikan semua soal perbandingan!', 150);
+                    }
+                }, 1200);
+            } else {
+                AudioFX.wrong();
+                updateGlobalStats(-1);
+                feedback.innerText = `❌ Belum tepat. Jawaban yang benar adalah "${q.ans}". Perhatikan bagian lingkaran yang diarsir!`;
+                feedback.className = 'text-center font-bold text-sm min-h-[30px] p-3 rounded-xl bg-red-100 text-red-800';
+            }
+        }
+
+        const quizQuestions = [
+            {
+                type: 'Penyebut Sama',
+                question: 'Manakah pecahan yang nilainya LEBIH BESAR di antara pecahan berikut?',
+                visual: { n1: 2, d1: 5, n2: 4, d2: 5 },
+                options: ['2/5', '4/5', 'Keduanya sama besar', 'Tidak dapat dibandingkan'],
+                answer: 1,
+                explanation: 'Ketika penyebutnya sama (5), pecahan dengan pembilang lebih besar (4 > 2) adalah yang lebih besar. Jadi 4/5 > 2/5.'
+            },
+            {
+                type: 'Mengurutkan',
+                question: 'Urutan pecahan 1/4, 3/4, 2/4 dari yang TERKECIL ke TERBESAR adalah...',
+                options: ['3/4, 2/4, 1/4', '1/4, 3/4, 2/4', '1/4, 2/4, 3/4', '2/4, 1/4, 3/4'],
+                answer: 2,
+                explanation: 'Karena penyebutnya sama (4), kita cukup mengurutkan pembilangnya: 1 < 2 < 3. Urutannya adalah 1/4, 2/4, 3/4.'
+            },
+            {
+                type: 'Soal Cerita',
+                question: 'Budi memakan 2/6 bagian kue, sedangkan Ani memakan 4/6 bagian kue. Siapakah yang memakan bagian kue lebih banyak?',
+                options: ['Budi', 'Ani', 'Sama banyak', 'Tidak ada yang makan'],
+                answer: 1,
+                explanation: 'Ani memakan 4/6 bagian dan Budi 2/6 bagian. Karena 4/6 > 2/6, Ani memakan kue lebih banyak.'
+            },
+            {
+                type: 'Pembilang Sama',
+                question: 'Manakah pernyataan yang BENAR mengenai perbandingan 1/2 dan 1/4?',
+                options: ['1/2 < 1/4', '1/2 = 1/4', '1/2 > 1/4', '1/4 lebih besar dari 1/2'],
+                answer: 2,
+                explanation: 'Jika pembilangnya sama (1), semakin kecil penyebutnya, semakin besar nilai bagiannya. Potongan 1/2 lebih besar daripada potongan 1/4.'
+            },
+            {
+                type: 'Pecahan Senilai',
+                question: 'Pecahan 2/4 memiliki nilai yang SAMABESAR (senilai) dengan pecahan...',
+                options: ['1/2', '1/3', '3/4', '2/2'],
+                answer: 0,
+                explanation: 'Jika pembilang dan penyebut 2/4 masing-masing dibagi 2, kita mendapatkan 1/2. Jadi 2/4 = 1/2.'
+            }
+        ];
+
+        function loadQuizQuestion() {
+            clearInterval(state.quizTimer);
+            state.quizTimeLeft = 30;
+
+            const q = quizQuestions[state.quizIndex];
+            document.getElementById('quiz-progress-indicator').innerText = `Soal ${state.quizIndex + 1} / ${quizQuestions.length}`;
+            document.getElementById('quiz-question-type').innerText = q.type;
+            document.getElementById('quiz-question-text').innerText = q.question;
+            document.getElementById('quiz-explanation-box').classList.add('hidden');
+
+            // Render optional visual helper
+            const visualBox = document.getElementById('quiz-question-visual');
+            if (q.visual) {
+                visualBox.innerHTML = `
+                    <div class="flex gap-4 items-center bg-slate-50 p-3 rounded-2xl border">
+                        <div class="flex flex-col items-center">
+                            ${createPieSVG(q.visual.n1, q.visual.d1, '#6366f1', 60)}
+                            <span class="text-xs font-bold mt-1">${q.visual.n1}/${q.visual.d1}</span>
+                        </div>
+                        <span class="font-bold text-slate-400">vs</span>
+                        <div class="flex flex-col items-center">
+                            ${createPieSVG(q.visual.n2, q.visual.d2, '#a855f7', 60)}
+                            <span class="text-xs font-bold mt-1">${q.visual.n2}/${q.visual.d2}</span>
+                        </div>
+                    </div>
+                `;
+            } else {
+                visualBox.innerHTML = '';
+            }
+
+            // Render options
+            const optionsContainer = document.getElementById('quiz-options-container');
+            optionsContainer.innerHTML = q.options.map((opt, idx) => `
+                <button onclick="answerQuiz(${idx})" class="quiz-opt-btn p-4 bg-white hover:bg-indigo-50 border-2 border-slate-200 hover:border-indigo-400 rounded-2xl text-left font-semibold text-slate-700 transition flex items-center justify-between group">
+                    <span>${opt}</span>
+                    <span class="w-8 h-8 rounded-full bg-slate-100 group-hover:bg-indigo-600 group-hover:text-white flex items-center justify-center font-bold text-xs transition">
+                        ${String.fromCharCode(65 + idx)}
+                    </span>
+                </button>
+            `).join('');
+
+            // Timer
+            document.getElementById('quiz-timer').innerText = state.quizTimeLeft;
+            state.quizTimer = setInterval(() => {
+                state.quizTimeLeft--;
+                document.getElementById('quiz-timer').innerText = state.quizTimeLeft;
+                if (state.quizTimeLeft <= 0) {
+                    clearInterval(state.quizTimer);
+                    answerQuiz(-1); // Time out
+                }
+            }, 1000);
+        }
+
+        function answerQuiz(optionIdx) {
+            clearInterval(state.quizTimer);
+            const q = quizQuestions[state.quizIndex];
+            const isCorrect = optionIdx === q.answer;
+
+            // Disable buttons
+            const btns = document.querySelectorAll('.quiz-opt-btn');
+            btns.forEach((btn, idx) => {
+                btn.disabled = true;
+                if (idx === q.answer) {
+                    btn.classList.add('bg-emerald-100', 'border-emerald-500', 'text-emerald-900');
+                } else if (idx === optionIdx) {
+                    btn.classList.add('bg-red-100', 'border-red-500', 'text-red-900');
+                }
+            });
+
+            if (isCorrect) {
+                AudioFX.correct();
+                state.quizScore++;
+                updateGlobalStats(50);
+            } else {
+                AudioFX.wrong();
+                updateGlobalStats(-1);
+            }
+
+            // Show explanation
+            document.getElementById('quiz-explanation-text').innerText = q.explanation;
+            document.getElementById('quiz-explanation-box').classList.remove('hidden');
+        }
+
+        function nextQuizQuestion() {
+            AudioFX.click();
+            state.quizIndex++;
+            if (state.quizIndex < quizQuestions.length) {
+                loadQuizQuestion();
+            } else {
+                showVictoryModal('Kuis Selesai!', `Kamu menjawab benar ${state.quizScore} dari ${quizQuestions.length} soal.`, state.quizScore * 50);
+            }
+        }
+
+        function updateSandbox() {
+            const num1 = parseInt(document.getElementById('sb-num1').value);
+            const den1 = parseInt(document.getElementById('sb-den1').value);
+            const num2 = parseInt(document.getElementById('sb-num2').value);
+            const den2 = parseInt(document.getElementById('sb-den2').value);
+
+            // Keep numerator <= denominator for clean presentation
+            document.getElementById('sb-num1').max = den1;
+            document.getElementById('sb-num2').max = den2;
+
+            const finalNum1 = Math.min(num1, den1);
+            const finalNum2 = Math.min(num2, den2);
+
+            document.getElementById('sb-num1-val').innerText = finalNum1;
+            document.getElementById('sb-den1-val').innerText = den1;
+            document.getElementById('sb-num2-val').innerText = finalNum2;
+            document.getElementById('sb-den2-val').innerText = den2;
+
+            // Render SVGs
+            document.getElementById('sb-pie1').innerHTML = createPieSVG(finalNum1, den1, '#6366f1', 90);
+            document.getElementById('sb-bar1').innerHTML = createBarSVG(finalNum1, den1, '#6366f1', 110, 24);
+
+            document.getElementById('sb-pie2').innerHTML = createPieSVG(finalNum2, den2, '#a855f7', 90);
+            document.getElementById('sb-bar2').innerHTML = createBarSVG(finalNum2, den2, '#a855f7', 110, 24);
+
+            // Compare calculation
+            const val1 = finalNum1 / den1;
+            const val2 = finalNum2 / den2;
+
+            let sym = '=';
+            let expl = 'Kedua pecahan memiliki nilai yang sama besar (senilai).';
+
+            if (val1 < val2) {
+                sym = '<';
+                expl = `Pecahan A (${finalNum1}/${den1}) lebih KECIL daripada Pecahan B (${finalNum2}/${den2}).`;
+            } else if (val1 > val2) {
+                sym = '>';
+                expl = `Pecahan A (${finalNum1}/${den1}) lebih BESAR daripada Pecahan B (${finalNum2}/${den2}).`;
+            }
+
+            document.getElementById('sb-result-symbol').innerText = `${finalNum1}/${den1} ${sym} ${finalNum2}/${den2}`;
+            document.getElementById('sb-result-text').innerText = expl;
+        }
+
+        window.onload = function() {
+            renderBadges();
+            updateSandbox();
+        };
+    </script>
+</body>
+</html>
